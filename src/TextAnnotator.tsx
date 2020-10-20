@@ -3,6 +3,7 @@ import React from 'react'
 import Mark from './Mark'
 import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets} from './utils'
 import {Span} from './span'
+import { BooleanLiteral } from 'react-text-annotate/node_modules/@babel/types'
 
 const Split = props => {
   if (props.mark) return <Mark {...props} />
@@ -24,8 +25,10 @@ interface TextSpan extends Span {
 
 type TextBaseProps<T> = {
   content: string
+  editableContent?: boolean
   value: T[]
   onChange: (value: T[]) => any
+  handleClick?: (value: number) => any
   getSpan?: (span: TextSpan) => T
   // TODO: determine whether to overwrite or leave intersecting ranges.
 }
@@ -40,7 +43,7 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
   }
 
   const handleMouseUp = () => {
-    if (!props.onChange) return
+    if (!props.onChange || !props.editableContent) return
 
     const selection = window.getSelection()
 
@@ -66,7 +69,8 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
     // Find and remove the matching split.
     const splitIndex = props.value.findIndex(s => s.start === start && s.end === end)
     if (splitIndex >= 0) {
-      props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)])
+      props.handleClick(splitIndex) 
+      //props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)])
     }
   }
 
