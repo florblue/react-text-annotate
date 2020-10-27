@@ -32,6 +32,7 @@
     "dev": "cd example && webpack-dev-server --hot --history-api-fallback --mode development",
     "build": "rm -rf lib && tsc -p ./ --declaration --outDir lib/",
     "prepublish": "npm run build",
+    "prepare": "npm run build",
     "predeploy": "docz build",
     "deploy": "gh-pages -d .docz/dist",
     "docz:dev": "docz dev",
