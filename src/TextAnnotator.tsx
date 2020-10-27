@@ -3,7 +3,6 @@ import React from 'react'
 import Mark from './Mark'
 import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets} from './utils'
 import {Span} from './span'
-import { BooleanLiteral } from 'react-text-annotate/node_modules/@babel/types'
 
 const Split = props => {
   if (props.mark) return <Mark {...props} />
