@@ -5,13 +5,13 @@ import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets} from './utils'
 import {Span} from './span'
 
 const Split = props => {
-  if (props.mark) return <Mark {...props} />
+  if (props.mark) return <Mark style={props.markStyle} {...props} />
 
   return (
     <span
       data-start={props.start}
       data-end={props.end}
-      onClick={() => props.onClick({start: props.start, end: props.end})}
+      onClick={() => props.onClick({start: props.start, end: props.end, id: props.id})}
     >
       {props.content}
     </span>
@@ -26,9 +26,10 @@ type TextBaseProps<T> = {
   content: string
   editableContent?: boolean
   value: T[]
-  onChange: (value: T[]) => any
-  handleClick?: (value: number) => any
+  onChange: (value: T[], span: Span) => any
+  handleClick?: (index: number, selectedSpan: Span) => any
   getSpan?: (span: TextSpan) => T
+  markStyle?: React.CSSProperties
   // TODO: determine whether to overwrite or leave intersecting ranges.
 }
 
@@ -58,27 +59,28 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
     if (selectionIsBackwards(selection)) {
       ;[start, end] = [end, start]
     }
-
-    props.onChange([...props.value, getSpan({start, end, text: content.slice(start, end)})])
+  
+    props.onChange([...props.value, getSpan({start, end, text: content.slice(start, end)})], getSpan({start, end, text: content.slice(start, end)}))
 
     window.getSelection().empty()
   }
 
   const handleSplitClick = ({start, end}) => {
-    // Find and remove the matching split.
+    // Default behaviour: Find and remove the matching split.
     const splitIndex = props.value.findIndex(s => s.start === start && s.end === end)
     if (splitIndex >= 0) {
-      props.handleClick(splitIndex) 
-      //props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)])
+      props.handleClick 
+        ? props.handleClick(splitIndex, getSpan({start, end, text: content.slice(start, end)}))
+        : props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)], getSpan({start, end, text: content.slice(start, end)}) )
     }
   }
 
-  const {content, value, style} = props
+  const {content, value, style, markStyle} = props
   const splits = splitWithOffsets(content, value)
   return (
     <div style={style} onMouseUp={handleMouseUp}>
       {splits.map(split => (
-        <Split key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
+        <Split markStyle={markStyle} key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
       ))}
     </div>
   )
