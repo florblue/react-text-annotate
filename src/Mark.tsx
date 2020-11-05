@@ -9,6 +9,7 @@ export interface MarkProps {
   color?: string
   onClick: (any) => any
   style?: React.CSSProperties
+  tagNameColor?: string
 }
 
 const Mark: React.SFC<MarkProps> = props => (
@@ -21,17 +22,27 @@ const Mark: React.SFC<MarkProps> = props => (
   >
     {props.content}
     {props.tag && (
-        <><span style={{ fontSize: '0.7em', fontWeight: 500, marginLeft: 6 }}>{props.tag}</span>
-        <span style={{
-          background: '#8a0f4a',
-          marginLeft: '0.3em',
-          borderWidth: '0.05em',
-          border: 'solid',
-          paddingRight: '0.3em',
-          paddingLeft: '0.3em',
-          color: 'white',
-          cursor: 'pointer',
-        }}>x</span></>
+        <>
+          <span style={{ 
+            fontSize: '0.7em',
+            fontWeight: 'bold',
+            marginRight: '0.5em',
+            marginLeft: '1em',
+            color: props.tagNameColor || 'black' }}
+          >
+            {props.tag}
+            </span>
+          <span style={{
+            background: props.tagNameColor ? props.tagNameColor : '#8a0f4a' ,
+            marginLeft: '0.3em',
+            paddingRight: '0.3em',
+            paddingLeft: '0.3em',
+            color: 'white',
+            cursor: 'pointer',
+          }}>
+            x
+          </span>
+        </>
     )}
   </mark>
 )

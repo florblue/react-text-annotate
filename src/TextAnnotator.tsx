@@ -30,7 +30,8 @@ type TextBaseProps<T> = {
   handleClick?: (index: number, selectedSpan: Span) => any
   getSpan?: (span: TextSpan) => T
   markStyle?: React.CSSProperties
-  // TODO: determine whether to overwrite or leave intersecting ranges.
+  doubleTaggingOff?: boolean
+  tagNameColor?: string
 }
 
 type TextAnnotatorProps<T> = React.HTMLAttributes<HTMLDivElement> & TextBaseProps<T>
@@ -54,7 +55,7 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
       selection.focusOffset
 
     if (selectionIsEmpty(selection) || selectionHasNoText()) return
-    if (hasLabelsInside(start, end, props.value)) return
+    if (props.doubleTaggingOff && hasLabelsInside(start, end, props.value)) return
     if (selectionIsBackwards(selection)) {
       ;[start, end] = [end, start]
     }
@@ -73,12 +74,12 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
     }
   }
 
-  const {content, value, style, markStyle} = props
+  const {content, value, style, markStyle, tagNameColor} = props
   const splits = splitWithOffsets(content, value)
   return (
     <div style={style} onMouseUp={handleMouseUp}>
       {splits.map(split => (
-        <Split markStyle={markStyle} key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
+        <Split tagNameColor={tagNameColor} markStyle={markStyle}  key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
       ))}
     </div>
   )
