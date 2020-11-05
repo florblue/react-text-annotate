@@ -83,3 +83,31 @@ export const selectionIsBackwards = (selection: Selection) => {
 
   return backward
 }
+
+export const hasLabelsInside = (start, end, labelsArray) => {
+  const arrayUnified = getArrayUnified(start > end ? end : start, end > start ? end : start);
+  return isBetween(arrayUnified, selectedLabelsToArray(labelsArray));
+};
+
+export const selectionHasNoText = () => {
+  const str = window.getSelection().toString()
+  return (!str || /^\s*$/.test(str));
+}
+
+const isBetween = (a1, a2) => {
+  return a1.some((val) => a2.indexOf(val) !== -1);
+};
+
+const getArrayUnified = (start, end) => {
+  return Array(end - start)
+      .fill('')
+      .map((_, idx) => start + idx);
+};
+
+const mapLabel = x => {
+  return getArrayUnified(x.start, x.end);
+};
+
+const selectedLabelsToArray = (labels) => {
+  return labels.map(mapLabel).flat();
+};

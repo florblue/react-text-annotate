@@ -1,7 +1,7 @@
 import React from 'react'
 
 import Mark from './Mark'
-import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets} from './utils'
+import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets, hasLabelsInside, selectionHasNoText} from './utils'
 import {Span} from './span'
 
 const Split = props => {
@@ -44,11 +44,8 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
 
   const handleMouseUp = () => {
     if (!props.onChange || !props.editableContent) return
-
     const selection = window.getSelection()
-
-    if (selectionIsEmpty(selection)) return
-
+    
     let start =
       parseInt(selection.anchorNode.parentElement.getAttribute('data-start'), 10) +
       selection.anchorOffset
@@ -56,12 +53,13 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
       parseInt(selection.focusNode.parentElement.getAttribute('data-start'), 10) +
       selection.focusOffset
 
+    if (selectionIsEmpty(selection) || selectionHasNoText()) return
+    if (hasLabelsInside(start, end, props.value)) return
     if (selectionIsBackwards(selection)) {
       ;[start, end] = [end, start]
     }
   
     props.onChange([...props.value, getSpan({start, end, text: content.slice(start, end)})], getSpan({start, end, text: content.slice(start, end)}))
-
     window.getSelection().empty()
   }
 
