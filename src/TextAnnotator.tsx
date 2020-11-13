@@ -44,7 +44,7 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
   }
 
   const handleMouseUp = () => {
-    if (!props.onChange || !props.editableContent) return
+    if (!props.editableContent) return
     const selection = window.getSelection()
     
     let start =
@@ -53,8 +53,7 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
     let end =
       parseInt(selection.focusNode.parentElement.getAttribute('data-start'), 10) +
       selection.focusOffset
-
-    if (selectionIsEmpty(selection) || selectionHasNoText()) return
+    if (selectionIsEmpty(selection) || selectionHasNoText() || isNaN(start) || isNaN(end)) return
     if (props.doubleTaggingOff && hasLabelsInside(start, end, props.value)) return
     if (selectionIsBackwards(selection)) {
       ;[start, end] = [end, start]
@@ -78,9 +77,9 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
   const splits = splitWithOffsets(content, value)
   return (
     <div style={style} onMouseUp={handleMouseUp}>
-      {splits.map(split => (
-        <Split tagNameColor={tagNameColor} markStyle={markStyle}  key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
-      ))}
+      {splits.map((split, index) => (
+        <Split tagNameColor={tagNameColor} markStyle={markStyle}  key={index} {...split} onClick={handleSplitClick} />
+     ))}
     </div>
   )
 }

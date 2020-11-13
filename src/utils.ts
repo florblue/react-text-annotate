@@ -85,7 +85,7 @@ export const selectionIsBackwards = (selection: Selection) => {
 }
 
 export const hasLabelsInside = (start, end, labelsArray) => {
-  const arrayUnified = getArrayUnified(start > end ? end : start, end > start ? end : start);
+  const arrayUnified = getArrayUnified(Math.min(start,end), Math.max(start,end));
   return isBetween(arrayUnified, selectedLabelsToArray(labelsArray));
 };
 
@@ -99,10 +99,14 @@ const isBetween = (a1, a2) => {
 };
 
 const getArrayUnified = (start, end) => {
-  return Array(end - start)
-      .fill('')
-      .map((_, idx) => start + idx);
-};
+  if (start == end) {
+    return []
+  } else {
+    return Array(end - start)
+    .fill('')
+    .map((_, idx) => start + idx)
+  }
+} 
 
 const mapLabel = x => {
   return getArrayUnified(x.start, x.end);
