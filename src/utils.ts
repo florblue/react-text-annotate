@@ -83,3 +83,64 @@ export const selectionIsBackwards = (selection: Selection) => {
 
   return backward
 }
+
+export const hasLabelsInside = (start, end, labelsArray) => {
+  const arrayUnified = getArrayUnified(Math.min(start,end), Math.max(start,end));
+  return isBetween(arrayUnified, selectedLabelsToArray(labelsArray));
+};
+
+export const selectionHasNoText = () => {
+  const str = window.getSelection().toString()
+  return (!str || /^\s*$/.test(str));
+}
+
+const isBetween = (a1, a2) => {
+  return a1.some((val) => a2.indexOf(val) !== -1);
+};
+
+const getArrayUnified = (start, end) => {
+  if (start == end) {
+    return []
+  } else {
+    return Array(end - start)
+    .fill('')
+    .map((_, idx) => start + idx)
+  }
+} 
+
+const mapLabel = x => {
+  return getArrayUnified(x.start, x.end);
+};
+
+const selectedLabelsToArray = (labels) => {
+  return labels.map(mapLabel).flat();
+};
+
+export const getCompletedWord = () => {
+  const selection = window.getSelection();
+  let range = selection.getRangeAt(0);
+  let node = selection.focusNode;
+  let reg = /^[a-zA-Z\u00C0-\u00FF-z0-9_@/#&+-]*$/;
+
+  const isAllowChar = (char: any) => {
+    return reg.test(char);
+  };
+
+  const isEOF = () => {
+    return node.textContent.length === range.endOffset;
+  };
+
+  const adjustLeft = () => {
+    return range.startOffset === 0 ? 0 : 1;
+  };
+
+  while (range.startOffset > 0 && isAllowChar(range.toString()[0])) {
+    range.setStart(node, range.startOffset - 1);
+  }
+  range.setStart(node, range.startOffset + adjustLeft());
+
+  while (!isEOF() && isAllowChar(range.toString().substr(-1))) {
+    range.setEnd(node, range.endOffset + 1);
+  }
+  range.setEnd(node, range.endOffset - 1);
+};

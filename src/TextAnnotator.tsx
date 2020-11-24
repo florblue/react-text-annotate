@@ -1,9 +1,15 @@
 import React from 'react'
 
 import Mark from './Mark'
-import {selectionIsEmpty, selectionIsBackwards, splitWithOffsets} from './utils'
+import {
+  selectionIsEmpty,
+  selectionIsBackwards,
+  splitWithOffsets,
+  hasLabelsInside,
+  selectionHasNoText,
+  getCompletedWord,
+  } from './utils'
 import {Span} from './span'
-import { BooleanLiteral } from 'react-text-annotate/node_modules/@babel/types'
 
 const Split = props => {
   if (props.mark) return <Mark {...props} />
@@ -12,7 +18,7 @@ const Split = props => {
     <span
       data-start={props.start}
       data-end={props.end}
-      onClick={() => props.onClick({start: props.start, end: props.end})}
+      onClick={() => props.onClick({start: props.start, end: props.end, id: props.id})}
     >
       {props.content}
     </span>
@@ -27,10 +33,13 @@ type TextBaseProps<T> = {
   content: string
   editableContent?: boolean
   value: T[]
-  onChange: (value: T[]) => any
-  handleClick?: (value: number) => any
+  onChange: (value: T[], span: Span) => any
+  handleClick?: (index: number, selectedSpan: Span) => any
   getSpan?: (span: TextSpan) => T
-  // TODO: determine whether to overwrite or leave intersecting ranges.
+  markStyle?: React.CSSProperties
+  doubleTaggingOff?: boolean
+  markClass?: string
+  withCompletedWordSelection?: boolean
 }
 
 type TextAnnotatorProps<T> = React.HTMLAttributes<HTMLDivElement> & TextBaseProps<T>
@@ -43,11 +52,14 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
   }
 
   const handleMouseUp = () => {
-    if (!props.onChange || !props.editableContent) return
-
+    if (!props.editableContent) return
     const selection = window.getSelection()
-
-    if (selectionIsEmpty(selection)) return
+   
+    if (selectionIsEmpty(selection) || selectionHasNoText()) return
+    
+    if (props.withCompletedWordSelection) {
+      getCompletedWord();
+    }
 
     let start =
       parseInt(selection.anchorNode.parentElement.getAttribute('data-start'), 10) +
@@ -55,32 +67,34 @@ const TextAnnotator = <T extends Span>(props: TextAnnotatorProps<T>) => {
     let end =
       parseInt(selection.focusNode.parentElement.getAttribute('data-start'), 10) +
       selection.focusOffset
-
+    if ( isNaN(start) || isNaN(end)) return
+    if (props.doubleTaggingOff && hasLabelsInside(start, end, props.value)) return
     if (selectionIsBackwards(selection)) {
       ;[start, end] = [end, start]
     }
-
-    props.onChange([...props.value, getSpan({start, end, text: content.slice(start, end)})])
-
+    
+    props.onChange([...props.value, getSpan({start, end, text: content.slice(start, end)})], getSpan({start, end, text: content.slice(start, end)}))
+    
     window.getSelection().empty()
   }
 
   const handleSplitClick = ({start, end}) => {
-    // Find and remove the matching split.
+    // Default behaviour: Find and remove the matching split.
     const splitIndex = props.value.findIndex(s => s.start === start && s.end === end)
     if (splitIndex >= 0) {
-      props.handleClick(splitIndex) 
-      //props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)])
+      props.handleClick 
+        ? props.handleClick(splitIndex, getSpan({start, end, text: content.slice(start, end)}))
+        : props.onChange([...props.value.slice(0, splitIndex), ...props.value.slice(splitIndex + 1)], getSpan({start, end, text: content.slice(start, end)}) )
     }
   }
 
-  const {content, value, style} = props
+  const {content, value, style, markStyle, markClass} = props
   const splits = splitWithOffsets(content, value)
   return (
     <div style={style} onMouseUp={handleMouseUp}>
-      {splits.map(split => (
-        <Split key={`${split.start}-${split.end}`} {...split} onClick={handleSplitClick} />
-      ))}
+      {splits.map((split, index) => (
+        <Split class={markClass} key={index} {...split} onClick={handleSplitClick} />
+     ))}
     </div>
   )
 }
